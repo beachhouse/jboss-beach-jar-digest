@@ -25,7 +25,10 @@ import sun.misc.BASE64Encoder;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
@@ -37,11 +40,11 @@ import java.util.jar.JarInputStream;
 public class Main {
     private static BASE64Encoder encoder = new BASE64Encoder();
 
-    public static void main(String[] args) throws Exception {
+    private static byte[] digest(final String fileName, final boolean showEntries) throws NoSuchAlgorithmException, IOException {
         // TODO: make the algorithm choice configurable
         final MessageDigest jarDigest = MessageDigest.getInstance("SHA1");
         final MessageDigest digest = MessageDigest.getInstance("SHA1");
-        final JarInputStream in = new JarInputStream(new BufferedInputStream(new FileInputStream(args[0])));
+        final JarInputStream in = new JarInputStream(new BufferedInputStream(new FileInputStream(fileName)));
         try {
             JarEntry entry;
             while ((entry = in.getNextJarEntry()) != null) {
@@ -63,21 +66,44 @@ public class Main {
                 if (name.startsWith("META-INF/maven/") && name.endsWith("/pom.properties"))
                     continue;
 
-                System.out.println("Name: " + name);
+                if (showEntries) System.out.println("Name: " + name);
                 digest.reset();
                 final byte[] buf = new byte[4096];
                 int l;
                 while ((l = in.read(buf)) > 0)
                     digest.update(buf, 0, l);
                 final byte[] d = digest.digest();
-                System.out.println("SHA1-Digest: " + encoder.encode(d));
-                System.out.println();
+                if (showEntries) {
+                    System.out.println("SHA1-Digest: " + encoder.encode(d));
+                    System.out.println();
+                }
                 jarDigest.update(d);
             }
         } finally {
             in.close();
         }
-        // TODO: make output format configurable
-        System.out.println("Jar-SHA1-Digest: " + encoder.encode(jarDigest.digest()));
+        return jarDigest.digest();
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length == 0) {
+            System.err.println("Usage: Main [-s] <file>...");
+            System.exit(1);
+        }
+        boolean showEntries = false;
+
+        for (String fileName : args) {
+            // TODO: make sensible options and process them properly
+            if (fileName.equals("-s"))
+                showEntries = true;
+
+            // TODO: make output format configurable
+            if (showEntries)
+                System.out.print("Jar-SHA1-Digest: ");
+            else
+                System.out.print(fileName + ": ");
+            final byte[] digest = digest(fileName, showEntries);
+            System.out.println(encoder.encode(digest));
+        }
     }
 }
