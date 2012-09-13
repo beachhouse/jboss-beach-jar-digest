@@ -96,14 +96,15 @@ public class Main {
             // TODO: make sensible options and process them properly
             if (fileName.equals("-s"))
                 showEntries = true;
-
-            // TODO: make output format configurable
-            if (showEntries)
-                System.out.print("Jar-SHA1-Digest: ");
-            else
-                System.out.print(fileName + ": ");
-            final byte[] digest = digest(fileName, showEntries);
-            System.out.println(encoder.encode(digest));
+            else {
+                // TODO: make output format configurable
+                if (showEntries)
+                    System.out.print("Jar-SHA1-Digest: ");
+                else
+                    System.out.print(fileName + ": ");
+                final byte[] digest = digest(fileName, showEntries);
+                System.out.println(encoder.encode(digest));
+            }
         }
     }
 }
