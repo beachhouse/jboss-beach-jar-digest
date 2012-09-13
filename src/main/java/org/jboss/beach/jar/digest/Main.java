@@ -55,7 +55,7 @@ public class Main {
                 final String name = entry.getName();
                 // do not hash information added by jarsigner
                 if (name.startsWith("META-INF/")) {
-                    if (name.endsWith(".SF") || name.endsWith(".DSA"))
+                    if (name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA"))
                         continue;
                 }
                 if (name.equals("META-INF/INDEX.LIST"))
