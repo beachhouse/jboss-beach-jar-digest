@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
@@ -49,6 +51,7 @@ public class Main {
         int numEntries = 0;
         try {
             JarEntry entry;
+            final SortedMap<String, byte[]> digests = new TreeMap<String, byte[]>();
             while ((entry = in.getNextJarEntry()) != null) {
                 numEntries++;
 
@@ -75,14 +78,18 @@ public class Main {
                 if (name.startsWith("META-INF/maven/") && name.endsWith("/pom.properties"))
                     continue;
 
-                if (showEntries) System.out.println("Name: " + name);
                 digest.reset();
                 final byte[] buf = new byte[4096];
                 int l;
                 while ((l = in.read(buf)) > 0)
                     digest.update(buf, 0, l);
                 final byte[] d = digest.digest();
+                digests.put(name, d);
+            }
+            for(SortedMap.Entry<String, byte[]> digestEntry : digests.entrySet()) {
+                final byte[] d = digestEntry.getValue();
                 if (showEntries) {
+                    System.out.println("Name: " + digestEntry.getKey());
                     System.out.println("SHA1-Digest: " + encoder.encode(d));
                     System.out.println();
                 }
