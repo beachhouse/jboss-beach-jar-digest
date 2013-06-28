@@ -27,6 +27,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.jar.JarEntry;
@@ -45,9 +46,12 @@ public class Main {
         final MessageDigest jarDigest = MessageDigest.getInstance("SHA1");
         final MessageDigest digest = MessageDigest.getInstance("SHA1");
         final JarInputStream in = new JarInputStream(new BufferedInputStream(new FileInputStream(fileName)));
+        int numEntries = 0;
         try {
             JarEntry entry;
             while ((entry = in.getNextJarEntry()) != null) {
+                numEntries++;
+
                 // do not hash directories
                 if (entry.isDirectory())
                     continue;
@@ -59,6 +63,11 @@ public class Main {
                         continue;
                 }
                 if (name.equals("META-INF/INDEX.LIST"))
+                    continue;
+
+                // depending on the tool used to 'zip' up, MANIFEST.MF may or may not be a jar entry
+                // to allow comparison we ignore MANIFEST.MF for the moment.
+                if (name.equals("META-INF/MANIFEST.MF"))
                     continue;
 
                 // do not hash timestamped maven artifacts
@@ -82,6 +91,19 @@ public class Main {
         } finally {
             in.close();
         }
+
+        if (numEntries == 0) {
+            // did not find any entries? then its not a jar file probably (or a zero size one). In any case digest it.
+            final InputStream fin = new BufferedInputStream(new FileInputStream(fileName));
+            try {
+                final byte[] buf = new byte[4096];
+                int l;
+                while ((l = fin.read(buf)) > 0)
+                    jarDigest.update(buf, 0, l);
+            } finally {
+                fin.close();
+            }
+        }
         return jarDigest.digest();
     }
 
@@ -98,11 +120,11 @@ public class Main {
                 showEntries = true;
             else {
                 // TODO: make output format configurable
+                final byte[] digest = digest(fileName, showEntries);
                 if (showEntries)
                     System.out.print("Jar-SHA1-Digest: ");
                 else
                     System.out.print(fileName + ": ");
-                final byte[] digest = digest(fileName, showEntries);
                 System.out.println(encoder.encode(digest));
             }
         }
