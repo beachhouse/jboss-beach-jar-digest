@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (c) 2012, Red Hat, Inc., and individual contributors
+ * Copyright (c) 2015, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -21,25 +21,28 @@
  */
 package org.jboss.beach.jar.digest;
 
-import sun.misc.BASE64Encoder;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 
-import java.io.File;
-import java.util.ServiceLoader;
+import static org.jboss.beach.jar.digest.MessageDigestHelper.createMessageDigest;
 
 /**
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
-public class Mockup {
-    private static <T> T[] array(final T... t) {
-        return t;
-    }
-    private static BASE64Encoder encoder = new BASE64Encoder();
-
-    public static void main(String[] args) throws Exception {
-        //Main.main(array("target/jboss-beach-jar-digest-0.1.0-SNAPSHOT.jar"));
-        final File file = new File("target/jboss-beach-jar-digest-0.1.0-SNAPSHOT.jar");
-        final FileProcessor processor = new DefaultFileProcessor();
-        final byte[] result = processor.apply(file);
-        System.out.println(encoder.encode(result));
+public class DefaultJarEntryProcessor implements JarEntryProcessor {
+    @Override
+    public byte[] apply(final JarEntry entry, final JarInputStream in) {
+        final MessageDigest digest = createMessageDigest();
+        try {
+            final byte[] buf = new byte[4096];
+            int l;
+            while ((l = in.read(buf)) > 0)
+                digest.update(buf, 0, l);
+            return digest.digest();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

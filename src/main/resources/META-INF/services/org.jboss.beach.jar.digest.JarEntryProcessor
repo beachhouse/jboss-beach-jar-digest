@@ -1,0 +1,4 @@
+org.jboss.beach.jar.digest.JarSignerJarEntryProcessor
+org.jboss.beach.jar.digest.ManifestJarEntryProcessor
+org.jboss.beach.jar.digest.MavenPropertiesJarEntryProcessor
+org.jboss.beach.jar.digest.DefaultJarEntryProcessor

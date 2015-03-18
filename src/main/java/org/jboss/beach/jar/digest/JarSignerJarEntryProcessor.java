@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (c) 2012, Red Hat, Inc., and individual contributors
+ * Copyright (c) 2015, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -21,25 +21,24 @@
  */
 package org.jboss.beach.jar.digest;
 
-import sun.misc.BASE64Encoder;
-
-import java.io.File;
-import java.util.ServiceLoader;
+import java.util.Arrays;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 
 /**
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
-public class Mockup {
-    private static <T> T[] array(final T... t) {
-        return t;
-    }
-    private static BASE64Encoder encoder = new BASE64Encoder();
-
-    public static void main(String[] args) throws Exception {
-        //Main.main(array("target/jboss-beach-jar-digest-0.1.0-SNAPSHOT.jar"));
-        final File file = new File("target/jboss-beach-jar-digest-0.1.0-SNAPSHOT.jar");
-        final FileProcessor processor = new DefaultFileProcessor();
-        final byte[] result = processor.apply(file);
-        System.out.println(encoder.encode(result));
+public class JarSignerJarEntryProcessor implements JarEntryProcessor {
+    @Override
+    public byte[] apply(final JarEntry entry, final JarInputStream in) {
+        final String name = entry.getName();
+        // do not hash information added by jarsigner
+        if (name.startsWith("META-INF/")) {
+            if (name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA"))
+                return EMPTY;
+        }
+        if (name.equals("META-INF/INDEX.LIST"))
+            return EMPTY;
+        return null;
     }
 }
