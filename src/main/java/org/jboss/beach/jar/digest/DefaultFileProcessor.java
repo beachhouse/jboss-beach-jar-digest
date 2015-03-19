@@ -32,6 +32,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -45,6 +46,7 @@ public class DefaultFileProcessor implements FileProcessor {
     private static BASE64Encoder encoder = new BASE64Encoder();
 
     private final BiFunction<JarEntry, JarInputStream, byte[]> jarEntryProcessor;
+    private BiConsumer<String, byte[]> postProcessor;
 
     public DefaultFileProcessor() {
         this(new ChainedServiceLoaderBiFunction<>(JarEntryProcessor.class));
@@ -79,11 +81,8 @@ public class DefaultFileProcessor implements FileProcessor {
                 }
                 for (SortedMap.Entry<String, byte[]> digestEntry : digests.entrySet()) {
                     final byte[] d = digestEntry.getValue();
-                    if (false) {
-                        System.out.println("Name: " + digestEntry.getKey());
-                        System.out.println("SHA1-Digest: " + encoder.encode(d));
-                        System.out.println();
-                    }
+                    if (postProcessor != null)
+                        postProcessor.accept(digestEntry.getKey(), d);
                     jarDigest.update(d);
                 }
             } finally {
@@ -106,5 +105,10 @@ public class DefaultFileProcessor implements FileProcessor {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void setPostProcessor(final BiConsumer<String, byte[]> postProcessor) {
+        this.postProcessor = postProcessor;
     }
 }

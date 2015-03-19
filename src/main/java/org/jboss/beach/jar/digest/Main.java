@@ -24,6 +24,7 @@ package org.jboss.beach.jar.digest;
 import sun.misc.BASE64Encoder;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -44,74 +45,14 @@ public class Main {
     private static BASE64Encoder encoder = new BASE64Encoder();
 
     private static byte[] digest(final String fileName, final boolean showEntries) throws NoSuchAlgorithmException, IOException {
-        // TODO: make the algorithm choice configurable
-        final MessageDigest jarDigest = MessageDigest.getInstance("SHA1");
-        final MessageDigest digest = MessageDigest.getInstance("SHA1");
-        final JarInputStream in = new JarInputStream(new BufferedInputStream(new FileInputStream(fileName)));
-        int numEntries = 0;
-        try {
-            JarEntry entry;
-            final SortedMap<String, byte[]> digests = new TreeMap<String, byte[]>();
-            while ((entry = in.getNextJarEntry()) != null) {
-                numEntries++;
-
-                // do not hash directories
-                if (entry.isDirectory())
-                    continue;
-
-                final String name = entry.getName();
-                // do not hash information added by jarsigner
-                if (name.startsWith("META-INF/")) {
-                    if (name.endsWith(".SF") || name.endsWith(".DSA") || name.endsWith(".RSA"))
-                        continue;
-                }
-                if (name.equals("META-INF/INDEX.LIST"))
-                    continue;
-
-                // depending on the tool used to 'zip' up, MANIFEST.MF may or may not be a jar entry
-                // to allow comparison we ignore MANIFEST.MF for the moment.
-                if (name.equals("META-INF/MANIFEST.MF"))
-                    continue;
-
-                // do not hash timestamped maven artifacts
-                // TODO: make this optional, enabled by default
-                if (name.startsWith("META-INF/maven/") && name.endsWith("/pom.properties"))
-                    continue;
-
-                digest.reset();
-                final byte[] buf = new byte[4096];
-                int l;
-                while ((l = in.read(buf)) > 0)
-                    digest.update(buf, 0, l);
-                final byte[] d = digest.digest();
-                digests.put(name, d);
-            }
-            for(SortedMap.Entry<String, byte[]> digestEntry : digests.entrySet()) {
-                final byte[] d = digestEntry.getValue();
-                if (showEntries) {
-                    System.out.println("Name: " + digestEntry.getKey());
-                    System.out.println("SHA1-Digest: " + encoder.encode(d));
-                    System.out.println();
-                }
-                jarDigest.update(d);
-            }
-        } finally {
-            in.close();
-        }
-
-        if (numEntries == 0) {
-            // did not find any entries? then its not a jar file probably (or a zero size one). In any case digest it.
-            final InputStream fin = new BufferedInputStream(new FileInputStream(fileName));
-            try {
-                final byte[] buf = new byte[4096];
-                int l;
-                while ((l = fin.read(buf)) > 0)
-                    jarDigest.update(buf, 0, l);
-            } finally {
-                fin.close();
-            }
-        }
-        return jarDigest.digest();
+        final FileProcessor processor = new DefaultFileProcessor();
+        if (showEntries)
+            processor.setPostProcessor((n, d) -> {
+                System.out.println("Name: " + n);
+                System.out.println("SHA1-Digest: " + encoder.encode(d));
+                System.out.println();
+            });
+        return processor.apply(new File(fileName));
     }
 
     public static void main(String[] args) throws Exception {

@@ -22,10 +22,12 @@
 package org.jboss.beach.jar.digest;
 
 import java.io.File;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
 public interface FileProcessor extends Function<File, byte[]> {
+    void setPostProcessor(BiConsumer<String, byte[]> postProcessor);
 }
