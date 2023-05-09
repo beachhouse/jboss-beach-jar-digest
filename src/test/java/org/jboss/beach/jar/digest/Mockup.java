@@ -21,10 +21,8 @@
  */
 package org.jboss.beach.jar.digest;
 
-import sun.misc.BASE64Encoder;
-
 import java.io.File;
-import java.util.ServiceLoader;
+import java.util.Base64;
 
 /**
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
@@ -33,13 +31,13 @@ public class Mockup {
     private static <T> T[] array(final T... t) {
         return t;
     }
-    private static BASE64Encoder encoder = new BASE64Encoder();
+    private static Base64.Encoder encoder = Base64.getEncoder();
 
     public static void main(String[] args) throws Exception {
         //Main.main(array("target/jboss-beach-jar-digest-0.1.0-SNAPSHOT.jar"));
         final File file = new File("target/jboss-beach-jar-digest-0.1.0-SNAPSHOT.jar");
         final FileProcessor processor = new DefaultFileProcessor();
         final byte[] result = processor.apply(file);
-        System.out.println(encoder.encode(result));
+        System.out.println(encoder.encodeToString(result));
     }
 }

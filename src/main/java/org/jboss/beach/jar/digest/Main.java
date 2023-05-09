@@ -21,20 +21,10 @@
  */
 package org.jboss.beach.jar.digest;
 
-import sun.misc.BASE64Encoder;
-
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
+import java.util.Base64;
 
 /**
  * Create a digest for a jar ignoring any timestamped bits.
@@ -42,14 +32,14 @@ import java.util.jar.JarInputStream;
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
 public class Main {
-    private static BASE64Encoder encoder = new BASE64Encoder();
+    private static Base64.Encoder encoder = Base64.getEncoder();
 
     private static byte[] digest(final String fileName, final boolean showEntries) throws NoSuchAlgorithmException, IOException {
         final FileProcessor processor = new DefaultFileProcessor();
         if (showEntries)
             processor.setPostProcessor((n, d) -> {
                 System.out.println("Name: " + n);
-                System.out.println("SHA1-Digest: " + encoder.encode(d));
+                System.out.println("SHA1-Digest: " + encoder.encodeToString(d));
                 System.out.println();
             });
         return processor.apply(new File(fileName));
@@ -73,7 +63,7 @@ public class Main {
                     System.out.print("Jar-SHA1-Digest: ");
                 else
                     System.out.print(fileName + ": ");
-                System.out.println(encoder.encode(digest));
+                System.out.println(encoder.encodeToString(digest));
             }
         }
     }

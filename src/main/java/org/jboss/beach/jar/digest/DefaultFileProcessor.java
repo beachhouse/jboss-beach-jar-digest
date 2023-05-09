@@ -21,15 +21,12 @@
  */
 package org.jboss.beach.jar.digest;
 
-import sun.misc.BASE64Encoder;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
@@ -43,8 +40,6 @@ import static org.jboss.beach.jar.digest.MessageDigestHelper.createMessageDigest
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  */
 public class DefaultFileProcessor implements FileProcessor {
-    private static BASE64Encoder encoder = new BASE64Encoder();
-
     private final BiFunction<JarEntry, JarInputStream, byte[]> jarEntryProcessor;
     private BiConsumer<String, byte[]> postProcessor;
 
