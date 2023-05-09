@@ -35,6 +35,8 @@ public class ManifestJarEntryProcessor implements JarEntryProcessor {
         // to allow comparison we ignore MANIFEST.MF for the moment.
         if (name.equals("META-INF/MANIFEST.MF"))
             return EMPTY;
+        if (name.startsWith("META-INF/maven"))
+            return EMPTY;
         return null;
     }
 }
